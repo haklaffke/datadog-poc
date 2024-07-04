@@ -1,10 +1,13 @@
 package de.hannes.datadogpoc.controller;
 
+import de.hannes.datadogpoc.component.ClaimAssembler;
 import de.hannes.datadogpoc.entities.Claim;
 import de.hannes.datadogpoc.exceptions.ClaimNotFoundException;
 import de.hannes.datadogpoc.repos.ClaimRepository;
+import de.hannes.datadogpoc.repos.DamageRepository;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.IanaLinkRelations;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,7 +20,15 @@ import java.util.concurrent.atomic.AtomicReference;
 @RequestMapping("/claim")
 
 public class ClaimController {
+    private ClaimAssembler claimAssembler;
     private ClaimRepository claimRepository;
+    private DamageRepository damageRepository;
+
+    public ClaimController(ClaimAssembler claimAssembler, DamageRepository damageRepository, ClaimRepository claimRepository) {
+        this.claimAssembler = claimAssembler;
+        this.claimRepository = claimRepository;
+        this.damageRepository = damageRepository;
+    }
 
     @GetMapping("/all")
     public CollectionModel<EntityModel<Claim>> all() {
@@ -39,10 +50,9 @@ public class ClaimController {
         if(!validateNewClaim(newClaim.getClaimID())) {
             return ResponseEntity.badRequest().body(null);
         }
-
-        Claim claim = claimRepository.save(newClaim);
-
-
+        newClaim.setTimestamp(System.currentTimeMillis());
+        EntityModel<Claim> entityModel = claimAssembler.toModel(claimRepository.save(newClaim));
+        return ResponseEntity.created(entityModel.getRequiredLink(IanaLinkRelations.SELF).toUri()).body(entityModel);
     }
 
     boolean validateNewClaim(Long newClaimID) {

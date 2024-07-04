@@ -1,10 +1,13 @@
 package de.hannes.datadogpoc.controller;
 
+import de.hannes.datadogpoc.component.DamageAssembler;
+import de.hannes.datadogpoc.entities.Claim;
 import de.hannes.datadogpoc.entities.Damage;
 import de.hannes.datadogpoc.exceptions.DamageNotFoundException;
 import de.hannes.datadogpoc.repos.DamageRepository;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.IanaLinkRelations;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,7 +20,14 @@ import java.util.concurrent.atomic.AtomicReference;
 @RequestMapping("/damage")
 
 public class DamageController {
+    private DamageAssembler damageAssembler;
     private DamageRepository damageRepository;
+
+    public DamageController(DamageAssembler damageAssembler, DamageRepository damageRepository) {
+        this.damageAssembler = damageAssembler;
+        this.damageRepository = damageRepository;
+        this.damageAssembler = damageAssembler;
+    }
 
     @GetMapping("/all")
     public CollectionModel<EntityModel<Damage>> all() {
@@ -39,10 +49,8 @@ public class DamageController {
         if(!validateNewDamage(newDamage.getDamageID())) {
             return ResponseEntity.badRequest().body(null);
         }
-
-        Damage damage = damageRepository.save(newDamage);
-
-
+        EntityModel<Damage> entityModel = damageAssembler.toModel(damageRepository.save(newDamage));
+        return ResponseEntity.created(entityModel.getRequiredLink(IanaLinkRelations.SELF).toUri()).body(entityModel);
     }
 
     boolean validateNewDamage(Long newDamageID) {
