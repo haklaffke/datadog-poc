@@ -1,7 +1,6 @@
 package de.hannes.datadogpoc.controller;
 
 import de.hannes.datadogpoc.component.DamageAssembler;
-import de.hannes.datadogpoc.entities.Claim;
 import de.hannes.datadogpoc.entities.Damage;
 import de.hannes.datadogpoc.exceptions.DamageNotFoundException;
 import de.hannes.datadogpoc.repos.DamageRepository;
@@ -45,11 +44,8 @@ public class DamageController {
     }
 
     @PostMapping("/add")
-    ResponseEntity<EntityModel<Damage>> newDamage(@RequestBody Damage newDamage) {
-        if(!validateNewDamage(newDamage.getDamageID())) {
-            return ResponseEntity.badRequest().body(null);
-        }
-        EntityModel<Damage> entityModel = damageAssembler.toModel(damageRepository.save(newDamage));
+    ResponseEntity<EntityModel<Damage>> newDamage(@RequestBody Damage damage) {
+        EntityModel<Damage> entityModel = damageAssembler.toModel(damageRepository.save(damage));
         return ResponseEntity.created(entityModel.getRequiredLink(IanaLinkRelations.SELF).toUri()).body(entityModel);
     }
 

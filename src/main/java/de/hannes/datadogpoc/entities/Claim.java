@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "claims")
@@ -18,13 +20,6 @@ public class Claim {
     private Long claimID;
 
     @OneToMany
-    @JoinColumn(name = "claim_id") // Adjust based on your schema; this assumes a foreign key in Damage table
-
-    private ArrayList<Damage> damages = new ArrayList<Damage>();
-
-    private Long timestamp;
-
-
-
-
+    private Set<Damage> damages = new HashSet<>();
+    private long timestamp;
 }

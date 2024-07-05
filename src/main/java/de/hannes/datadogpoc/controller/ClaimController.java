@@ -2,6 +2,7 @@ package de.hannes.datadogpoc.controller;
 
 import de.hannes.datadogpoc.component.ClaimAssembler;
 import de.hannes.datadogpoc.entities.Claim;
+import de.hannes.datadogpoc.entities.Damage;
 import de.hannes.datadogpoc.exceptions.ClaimNotFoundException;
 import de.hannes.datadogpoc.repos.ClaimRepository;
 import de.hannes.datadogpoc.repos.DamageRepository;
@@ -9,12 +10,18 @@ import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.IanaLinkRelations;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
+
+import static java.lang.System.currentTimeMillis;
 
 @RestController
 @RequestMapping("/claim")
@@ -39,32 +46,21 @@ public class ClaimController {
 
     @GetMapping("/{id}")
     public EntityModel<Claim> one(@PathVariable Long id) {
-        Long claimID = getClaimID();
-
-        Claim claim = claimRepository.findById(id).orElseThrow(() -> new ClaimNotFoundException(id));
-        return EntityModel.of(claim);
+        Claim claimFoundByID = claimRepository.findById(id).orElseThrow(() -> new ClaimNotFoundException(id));
+        return EntityModel.of(claimFoundByID);
     }
-
     @PostMapping("/add")
-    ResponseEntity<EntityModel<Claim>> newClaim(@RequestBody Claim newClaim) {
-        if(!validateNewClaim(newClaim.getClaimID())) {
-            return ResponseEntity.badRequest().body(null);
+    public ResponseEntity<EntityModel<Claim>> newClaim(@RequestBody Map<String, List<Long>> payload) {
+        Claim newClaim = new Claim();
+        newClaim.setTimestamp(currentTimeMillis());
+        List<Long> claimsByID = payload.get("claimsByID");
+        for(Long claimID : claimsByID) {
+            Damage damage = damageRepository.findById(claimID).orElseThrow(() -> new ClaimNotFoundException(claimID));
+            newClaim.getDamages().add(damage);
         }
-        newClaim.setTimestamp(System.currentTimeMillis());
         EntityModel<Claim> entityModel = claimAssembler.toModel(claimRepository.save(newClaim));
         return ResponseEntity.created(entityModel.getRequiredLink(IanaLinkRelations.SELF).toUri()).body(entityModel);
     }
-
-    boolean validateNewClaim(Long newClaimID) {
-        AtomicBoolean claimIsValid = new AtomicBoolean(true);
-        claimRepository.findAll().forEach(claim -> {
-            if(claim.getClaimID().equals(newClaimID))    {
-                claimIsValid.set(false);
-            }
-        });
-        return claimIsValid.get();
-    }
-
 
     private Long getClaimID() {
         Long newClaimID = getClaimID();
