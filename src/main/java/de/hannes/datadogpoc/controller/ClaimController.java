@@ -10,13 +10,10 @@ import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.IanaLinkRelations;
 import org.springframework.http.ResponseEntity;
-Aimport org.springframework.web.bind.annotation.*;
-
+import org.springframework.web.bind.annotation.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
-
 import static java.lang.System.currentTimeMillis;
 
 @RestController
@@ -50,7 +47,7 @@ public class ClaimController {
     public ResponseEntity<EntityModel<Claim>> newClaim(@RequestBody Map<String, List<Long>> payload) {
         Claim newClaim = new Claim();
         newClaim.setTimestamp(currentTimeMillis());
-        newClaim.setStatus(1);
+        newClaim.setStatus(Claim.status.CREATED);
         List<Long> damagesByID = payload.get("damagesByID");
         for(Long damageID : damagesByID) {
             Damage damage = damageRepository.findById(damageID).orElseThrow(() -> new ClaimNotFoundException(damageID));
@@ -61,22 +58,13 @@ public class ClaimController {
     }
 
     @PutMapping("/update/{id}")
-    public ResponseEntity<EntityModel<Claim>> updateClaim(@RequestBody Map<String, List<Long>> payload) {
-
+    public ResponseEntity<EntityModel<Claim>> updateClaimStatus(@PathVariable Long id, @RequestBody Map<String, String> payload) {
+        Claim claim = claimRepository.findById(id).orElseThrow(() -> new ClaimNotFoundException(id));
+        String statusStr = payload.get("status");
+        Claim.status newStatus = Claim.status.valueOf(statusStr.toUpperCase());
+        claim.setStatus(newStatus);
+        Claim updatedClaim = claimRepository.save(claim);
+        EntityModel<Claim> entityModel = claimAssembler.toModel(updatedClaim);
+        return ResponseEntity.ok(entityModel);
     }
-
-
-    private Long getClaimID() {
-        Long newClaimID = getClaimID();
-        AtomicReference<Long> claimID = new AtomicReference<>(0L);
-        claimRepository.findAll().forEach(claim -> {
-            if(claim.getClaimID().equals(newClaimID)) {
-                claimID.set(claim.getClaimID());
-            }
-        });
-        return claimID.get();
-    }
-
-
-
 }

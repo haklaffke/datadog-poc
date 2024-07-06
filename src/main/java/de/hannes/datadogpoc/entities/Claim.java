@@ -26,5 +26,6 @@ public class Claim {
     @OneToMany
     private Set<Damage> damages = new HashSet<>();
     private long timestamp;
-    private int status;
+    public enum status{CREATED, IN_PROGRESS, DONE, CANCELLED};
+    private status status;
 }
