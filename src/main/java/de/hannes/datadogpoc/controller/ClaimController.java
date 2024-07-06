@@ -10,12 +10,8 @@ import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.IanaLinkRelations;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
+Aimport org.springframework.web.bind.annotation.*;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -49,18 +45,26 @@ public class ClaimController {
         Claim claimFoundByID = claimRepository.findById(id).orElseThrow(() -> new ClaimNotFoundException(id));
         return EntityModel.of(claimFoundByID);
     }
+
     @PostMapping("/add")
     public ResponseEntity<EntityModel<Claim>> newClaim(@RequestBody Map<String, List<Long>> payload) {
         Claim newClaim = new Claim();
         newClaim.setTimestamp(currentTimeMillis());
-        List<Long> claimsByID = payload.get("claimsByID");
-        for(Long claimID : claimsByID) {
-            Damage damage = damageRepository.findById(claimID).orElseThrow(() -> new ClaimNotFoundException(claimID));
+        newClaim.setStatus(1);
+        List<Long> damagesByID = payload.get("damagesByID");
+        for(Long damageID : damagesByID) {
+            Damage damage = damageRepository.findById(damageID).orElseThrow(() -> new ClaimNotFoundException(damageID));
             newClaim.getDamages().add(damage);
         }
         EntityModel<Claim> entityModel = claimAssembler.toModel(claimRepository.save(newClaim));
         return ResponseEntity.created(entityModel.getRequiredLink(IanaLinkRelations.SELF).toUri()).body(entityModel);
     }
+
+    @PutMapping("/update/{id}")
+    public ResponseEntity<EntityModel<Claim>> updateClaim(@RequestBody Map<String, List<Long>> payload) {
+
+    }
+
 
     private Long getClaimID() {
         Long newClaimID = getClaimID();

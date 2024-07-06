@@ -1,9 +1,13 @@
 package de.hannes.datadogpoc.entities;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import jakarta.persistence.*;
-import lombok.*;
-
-import java.util.ArrayList;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.OneToMany;
+import lombok.Getter;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -22,4 +26,5 @@ public class Claim {
     @OneToMany
     private Set<Damage> damages = new HashSet<>();
     private long timestamp;
+    private int status;
 }
