@@ -6,6 +6,7 @@ import de.hannes.datadogpoc.entities.Damage;
 import de.hannes.datadogpoc.exceptions.ClaimNotFoundException;
 import de.hannes.datadogpoc.repos.ClaimRepository;
 import de.hannes.datadogpoc.repos.DamageRepository;
+import de.hannes.datadogpoc.service.DatadogLogger;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.IanaLinkRelations;
@@ -54,6 +55,7 @@ public class ClaimController {
             newClaim.getDamages().add(damage);
         }
         EntityModel<Claim> entityModel = claimAssembler.toModel(claimRepository.save(newClaim));
+        DatadogLogger.sendLogToDatadog(newClaim);
         return ResponseEntity.created(entityModel.getRequiredLink(IanaLinkRelations.SELF).toUri()).body(entityModel);
     }
 
@@ -63,8 +65,10 @@ public class ClaimController {
         String statusStr = payload.get("status");
         Claim.status newStatus = Claim.status.valueOf(statusStr.toUpperCase());
         claim.setStatus(newStatus);
+        claim.setTimestamp(currentTimeMillis());
         Claim updatedClaim = claimRepository.save(claim);
         EntityModel<Claim> entityModel = claimAssembler.toModel(updatedClaim);
+        DatadogLogger.sendLogToDatadog(updatedClaim);
         return ResponseEntity.ok(entityModel);
     }
 }

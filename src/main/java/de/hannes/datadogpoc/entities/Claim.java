@@ -1,9 +1,6 @@
 package de.hannes.datadogpoc.entities;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-import jakarta.persistence.OneToMany;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
@@ -20,10 +17,16 @@ import java.util.Set;
 public class Claim {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long claimID;
 
-    @OneToMany
+    @ManyToMany(cascade = { CascadeType.PERSIST, CascadeType.MERGE })
+    @JoinTable(
+            name = "claim_damage",
+            joinColumns = @JoinColumn(name = "claim_id"),
+            inverseJoinColumns = @JoinColumn(name = "damage_id")
+    )
+    @JsonManagedReference
     private Set<Damage> damages = new HashSet<>();
     private long timestamp;
     public enum status{CREATED, IN_PROGRESS, DONE, CANCELLED};

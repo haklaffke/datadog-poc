@@ -1,5 +1,6 @@
 package de.hannes.datadogpoc.entities;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.*;
@@ -19,6 +20,10 @@ public class Damage {
     @Id
     @GeneratedValue
     private Long damageID;
+
+    @ManyToMany(mappedBy = "damages")
+    @JsonBackReference
+    private Set<Claim> claims = new HashSet<>();
 
     private int price;
 
